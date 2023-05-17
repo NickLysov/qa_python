@@ -1,4 +1,5 @@
 from main import BooksCollector
+import pytest
 
 class TestBooksCollector:
     def test_add_new_book_add_two_books(self):
@@ -7,20 +8,16 @@ class TestBooksCollector:
         collector.add_new_book('Что делать, если ваш кот хочет вас убить')
         assert len(collector.get_books_rating()) == 2
 
-    def test_set_book_rating_change_rating_input_lower_rating_than_can(self):
+    @pytest.mark.parametrize('arg', [-1, 0, 11, 'a'])
+    def test_set_book_rating_change_rating_input_wrong_value(self, arg):
         collector = BooksCollector()
         name = 'Гордость и предубеждение и зомби'
         collector.add_new_book(name)
-        collector.set_book_rating(name, -1)
+        collector.set_book_rating(name, arg)
         assert collector.get_book_rating(name) == 1
 
-    def test_set_book_rating_change_rating_input_higher_rating_than_can(self):
-        collector = BooksCollector()
-        name = 'Гордость и предубеждение и зомби'
-        collector.add_new_book(name)
-        collector.set_book_rating(name, 11)
-        assert collector.get_book_rating(name) == 1
-    def test_get_books_rating_not_added_book_has_not_rating(self):
+
+    def test_get_book_rating_not_added_book_has_not_rating(self):
         collector = BooksCollector()
         assert collector.get_book_rating('Гордость и предубеждение и зомби') is None
 
@@ -28,13 +25,6 @@ class TestBooksCollector:
         collector = BooksCollector()
         name = 'Гордость и предубеждение и зомби'
         assert collector.add_book_in_favorites(name) is None
-
-    def test_add_book_in_favorites_can_add_book(self):
-        collector = BooksCollector()
-        name = 'Гордость и предубеждение и зомби'
-        collector.add_new_book(name)
-        collector.add_book_in_favorites(name)
-        assert collector.favorites.count(name)
 
     def test_get_list_of_favorites_added_books_in_favorites_in_list(self):
         collector = BooksCollector()
@@ -44,7 +34,7 @@ class TestBooksCollector:
         collector.add_new_book(name2)
         collector.add_book_in_favorites(name)
         collector.add_book_in_favorites(name2)
-        assert name, name2 in collector.get_list_of_favorites_books
+        assert name, name2 in collector.get_list_of_favorites_books()
 
     def test_delete_book_from_favorites_check_than_list_have_not_deleted_book(self):
         collector = BooksCollector()
@@ -52,7 +42,7 @@ class TestBooksCollector:
         collector.add_new_book(name)
         collector.add_book_in_favorites(name)
         collector.delete_book_from_favorites(name)
-        assert collector.favorites.count(name) == 0
+        assert collector.get_list_of_favorites_books().count(name) == 0
 
     def test_set_book_rating_added_book_changed_rating(self):
         collector = BooksCollector()
@@ -75,10 +65,18 @@ class TestBooksCollector:
         assert name2, name3 in collector.get_books_with_specific_rating(6)
 
 
-    def test_add_new_book_cant_add_same_book_two_time(self):
+    def test_add_new_book_add_same_book_two_time_do_not_change_early_rating_changes(self):
         collector = BooksCollector()
         name = 'Азбука'
         collector.add_new_book(name)
         collector.set_book_rating(name, 4)
         collector.add_new_book(name)
         assert collector.get_book_rating(name) == 4
+
+    def test_add_new_book_cant_add_same_book_two_time(self):
+        collector = BooksCollector()
+        name = 'Азбука'
+        collector.add_new_book(name)
+        collector.set_book_rating(name, 4)
+        collector.add_new_book(name)
+        assert len(collector.get_books_rating()) == 1
